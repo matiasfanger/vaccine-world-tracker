@@ -1,18 +1,16 @@
-# vaccine-world-tracker
+<h1 align="center">Vaccine World Tracker</h1>
 
-## Build Setup
+<p align="center">
+<img src=".github/main.png"></img>
+</p>
 
-```bash
-# install dependencies
-$ npm install
+# TRY IT 🚀
+[Website](https://vaccine-world-tracker.netlify.app/)
 
-# serve with hot reload at localhost:3000
-$ npm run dev
+# Description
+Graph showing information about the progress of vaccination in the world.
+Vaccine types, total dose vaccinations, people partially and fully vaccinated, daily stats.
 
-# build for production and launch server
-$ npm run build
-$ npm run start
-
-# generate static project
-$ npm run generate
-```
+<p align="center">
+<img src=".github/description.png"></img>
+</p>
