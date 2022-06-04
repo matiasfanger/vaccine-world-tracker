@@ -1,4 +1,4 @@
-<h1 align="center">Vaccine World Tracker (Api not active)</h1>
+<h1 align="center">Vaccine World Tracker</h1>
 
 <p align="center">
 <img src=".github/main.png"></img>
