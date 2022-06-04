@@ -43,7 +43,7 @@
         </v-sheet>
       </v-col>
 
-      <v-col cols="12" 
+      <v-col cols="12"
         ><LineChart
           :styles="myStyles"
           v-if="componentRenderer"
@@ -65,36 +65,23 @@
           </v-card-title>
 
           <v-card-text class="mt-3 white--text body-1">
-            Vaccine type {{ countryInfo.data.data[0].vaccine_type
-            }}<br /><br />
+            Continent {{ countryInfo.continent }}<br /><br />
             <v-row>
               <v-col>
-                <strong class="font-weight-light"
-                  >Total dose vaccinations:</strong
-                >
-                {{ countryInfo.data.data[0].total_dose_vaccinations
-                }}<br />
-                <strong class="font-weight-light">People vaccinated:</strong>
-                {{ countryInfo.data.data[0].people_vaccinated }}<br />
-                <strong class="font-weight-light"
-                  >People fully vaccinated:</strong
-                >
-                {{ countryInfo.data.data[0].people_fully_vaccinated
-                }}<br />
+                <strong class="font-weight-light">Cases:</strong>
+                {{ countryInfo.cases }}<br />
+                <strong class="font-weight-light">Deaths</strong>
+                {{ countryInfo.deaths }}<br />
+                <strong class="font-weight-light">Recovered:</strong>
+                {{ countryInfo.recovered }}<br />
               </v-col>
               <v-col>
-                <strong class="font-weight-light">Daily vaccinations:</strong>
-                {{ countryInfo.data.data[0].daily_vaccinations }}<br />
-                <strong class="font-weight-light"
-                  >Daily vaccinations per million:</strong
-                >
-                {{ countryInfo.data.data[0].daily_vaccinations_per_million
-                }}<br />
-                <strong class="font-weight-light"
-                  >People fully vaccinated per hundred:</strong
-                >
-                {{ countryInfo.data.data[0].people_vaccinated_per_hundred
-                }}<br />
+                <strong class="font-weight-light">Cases per M:</strong>
+                {{ countryInfo.casesPerOneMillion }}<br />
+                <strong class="font-weight-light">Tests:</strong>
+                {{ countryInfo.tests }}<br />
+                <strong class="font-weight-light">Tests per M:</strong>
+                {{ countryInfo.testsPerOneMillion }}<br />
               </v-col>
             </v-row>
           </v-card-text>
@@ -131,70 +118,70 @@ export default {
         labels: [],
         datasets: [
           {
-            label: "Daily vaccinations",
+            label: "Total dose vaccinations",
             data: [],
             backgroundColor: "rgba(255, 0,0, 0.5)",
             pointBackgroundColor: "white",
             borderWidth: 1,
             pointBorderColor: "white",
-            radius: 3,
-          },
-        ],
+            radius: 1
+          }
+        ]
       },
       barChartOptions: {
         responsive: true,
         maintainAspectRatio: false,
         borderWidth: 3,
         legend: {
-          display: false,
+          display: false
         },
         title: {
           display: false,
           text: "Vaccines World Tracker",
           fontSize: 24,
-          fontColor: "#FF0700",
+          fontColor: "#FF0700"
         },
         tooltips: {
-          backgroundColor: "#17BF62",
+          backgroundColor: "#17BF62"
         },
         scales: {
           xAxes: [
             {
               gridLines: {
-                display: false,
-              },
-            },
+                display: false
+              }
+            }
           ],
           yAxes: [
             {
               color: "#444",
               ticks: {
-                beginAtZero: true,
+                beginAtZero: true
               },
               gridLines: {
-                display: false,
-              },
-            },
-          ],
-        },
-      },
+                display: false
+              }
+            }
+          ]
+        }
+      }
     };
   },
   watch: {
-    countrySelected: function () {
+    countrySelected: function() {
       if (this.countries.includes(this.countrySelected)) {
-        this.obtenerPais();
+        this.getHistoricalInfo();
       }
-    },
+    }
   },
   computed: {
     myStyles() {
       return {
         height: "75vh",
         width: "99vw",
-        position: "absolute",
+        position: "absolute"
       };
-    },
+    }
   },
   methods: {
     async getIp() {
@@ -205,10 +192,13 @@ export default {
       const location = await axios({
         method: "GET",
         url: "https://ipapi.co/" + ip.data.origin + "/json/",
-        headers: { "content-type": "application/json" },
+        headers: { "content-type": "application/json" }
       });
       // SAVING DATA
-      this.latestCountryPicked = this.countrySelected = this.defaultCountry = { name: location.data.country_name, code: location.data.country };
+      this.latestCountryPicked = this.countrySelected = this.defaultCountry = {
+        name: location.data.country_name,
+        code: location.data.country
+      };
       // GETTING COUNTRIES LIST
       const countriesList = await fetch(
         "https://gist.githubusercontent.com/matifanger/4841780c0758152fbf592ed84e755d68/raw/fc47ebaaf923ce17d7550e9df976b7cc3e396e31/countries.json"
@@ -220,69 +210,91 @@ export default {
           title: "Error!",
           text: message,
           footer:
-            '<a href="https://github.com/matifanger/vaccine-world-tracker/issues">Tell me here!</a>',
+            '<a href="https://github.com/matifanger/vaccine-world-tracker/issues">Tell me here!</a>'
         });
       }
       this.countries = await countriesList.json();
       // console.log(this.countries);
-      this.obtenerPais();
+      this.getHistoricalInfo();
     },
-    obtenerPais() {
-      console.log("starting");
-      axios({
+    async getHistoricalInfo() {
+      const historial_response = await axios({
         method: "GET",
-        url:
-          "https://api.thecovidvaccines.com/api/v1/countries/" +
-          this.countrySelected.name,
-      })
-        .then((result) => {
-          if (result.status == 200) {
-            this.latestCountryPicked = this.countrySelected;
-            this.countryInfo = result;
-            // CLEANING CHART DATA
-            this.barChartData.labels = [];
-            this.barChartData.datasets[0].data = [];
+        url: "https://corona.lmao.ninja/v2/historical/:query".replace(
+          ":query",
+          this.countrySelected.code
+        ),
+        params: {
+          lastdays: "all"
+        }
+      });
+      const country_response = await axios({
+        method: "GET",
+        url: "https://corona.lmao.ninja/v2/countries/:query".replace(
+          ":query",
+          this.countrySelected.code
+        )
+      });
+      if (
+        historial_response.status === 200 &&
+        country_response.status === 200
+      ) {
+        this.latestCountryPicked = this.countrySelected;
+        // CLEANING CHART DATA
+        this.barChartData.labels = [];
+        this.barChartData.datasets[0].data = [];
+        // FILLING CHART DATA
+        this.barChartData.labels = Object.keys(
+          historial_response.data.timeline.cases
+        );
+        this.barChartData.datasets[0].data = Object.values(
+          historial_response.data.timeline.cases
+        );
 
-            // FILLING CHART DATA
-            for (let i = 0; i < result.data.data.length; i++) {
-              var date = result.data.data[i]["date"];
-              var daily_vaccinations =
-                result.data.data[i]["daily_vaccinations"];
-              if (date != null || daily_vaccinations != null) {
-                this.barChartData.labels.push(date);
-                this.barChartData.datasets[0].data.push(daily_vaccinations);
-              }
-            }
+        // FILLING COUNTRY INFO
+        this.countryInfo = {
+          country: country_response.data.country,
+          cases: country_response.data.cases,
+          todayCases: country_response.data.todayCases,
+          deaths: country_response.data.deaths,
+          todayDeaths: country_response.data.todayDeaths,
+          recovered: country_response.data.recovered,
+          active: country_response.data.active,
+          critical: country_response.data.critical,
+          casesPerOneMillion: country_response.data.casesPerOneMillion,
+          deathsPerOneMillion: country_response.data.deathsPerOneMillion,
+          tests: country_response.data.tests,
+          testsPerOneMillion: country_response.data.testsPerOneMillion,
+          population: country_response.data.population,
+          continent: country_response.data.continent,
+          oneCasePerPeople: country_response.data.oneCasePerPeople,
+          oneDeathPerPeople: country_response.data.oneDeathPerPeople,
+          oneTestPerPeople: country_response.data.oneTestPerPeople,
+          activePerOneMillion: country_response.data.activePerOneMillion,
+          recoveredPerOneMillion: country_response.data.recoveredPerOneMillion,
+          criticalPerOneMillion: country_response.data.criticalPerOneMillion,
+          affectedCountries: country_response.data.affectedCountries
+        };
 
-            // SORTING CHART DATA
-            this.barChartData.labels = this.barChartData.labels.sort();
-            console.log();
-            this.barChartData.datasets[0].data =
-              this.barChartData.datasets[0].data.reverse();
-
-            // RE-RENDERING THE CHART
-            this.keyvalue++;
-
-            // COUNTRY LOADED SUCCESS
-            this.componentRenderer = true;
-          }
-        })
-        .catch((error) => {
-          this.latestCountryPicked = this.countrySelected = this.defaultCountry;
-          this.$swal.fire({
-            icon: "error",
-            title: "Sorry!",
-            text: "We don't have any information about that country 😔",
-          });
+        // RE-RENDERING THE CHART
+        this.keyvalue++;
+        // COUNTRY LOADED SUCCESS
+        this.componentRenderer = true;
+      } else {
+        this.latestCountryPicked = this.countrySelected = this.defaultCountry;
+        this.$swal.fire({
+          icon: "error",
+          title: "Sorry!",
+          text: "We don't have any information about that country 😔"
         });
-    },
+      }
+    }
   },
   mounted() {
     this.getIp();
-  },
+  }
 };
 </script>
-
 
 <style>
 /* SCROLLBAR OUT */
